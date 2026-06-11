@@ -1,12 +1,12 @@
 # Optimize JAR
-FROM eclipse-temurin:21-jre AS builder
+FROM eclipse-temurin:23-jre AS builder
 WORKDIR /app
 ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} application.jar
 RUN java -Djarmode=layertools -jar application.jar extract
 
 # Build final image
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:23-jre
 EXPOSE 8081
 
 # Copy layered JAR

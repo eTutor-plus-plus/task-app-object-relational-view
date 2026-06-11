@@ -1,11 +1,19 @@
-version: '3'
-
 services:
-  postgres:
-    image: postgres:16
+  oracle-db:
+    image: gvenzl/oracle-free:latest
     environment:
-      - 'POSTGRES_DB=etutor_binary_search'
-      - 'POSTGRES_PASSWORD=secret'
-      - 'POSTGRES_USER=etutor_binary_search'
+      ORACLE_PASSWORD: root
+      APP_USER: SYSTEM
+      APP_USER_PASSWORD: root
     ports:
-      - '5434:5432'
+      - '1521:1521'
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+    healthcheck:
+      test: ["CMD", "healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  oracle-data:

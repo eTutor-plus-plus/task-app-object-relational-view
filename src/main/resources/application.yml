@@ -1,6 +1,6 @@
 spring:
   application:
-    name: eTutor Task-App - Binary Search
+    name: eTutor Task-App - Object-Relational Views
   messages:
     fallback-to-system-locale: false
 
@@ -11,6 +11,10 @@ spring:
       ddl-auto: none
       naming:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+    properties:
+      hibernate:
+        type:
+          preferred_uuid_jdbc_type: CHAR
 
   # Server
   servlet:
@@ -41,11 +45,11 @@ logging:
   include-application-name: false
   logback:
     rollingpolicy:
-      file-name-pattern: logs/task-app-binary-search.%d{yyyy-MM-dd}.%i.log
+      file-name-pattern: logs/task-app-or-view.%d{yyyy-MM-dd}.%i.log
       max-file-size: 50MB
       max-history: 14
   file:
-    name: logs/task-app-binary-search.log
+    name: logs/task-app-or-view.log
 
 # Actuator
 management:

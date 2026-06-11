@@ -1,23 +1,45 @@
+# application-dev.yml
+
 # Logging
 logging:
   level:
     ROOT: info
     at.jku.dke: trace
 
-# Data
+# Spring Configuration
 spring:
+  # Docker Compose deaktivieren
+  docker:
+    compose:
+      enabled: true
+
+  # Haupt-Datenbank für eTutor Metadaten
   datasource:
-    url: jdbc:postgresql://localhost:5434/etutor_binary_search
-    username: etutor_binary_search
-    password: secret
+    url: jdbc:oracle:thin:@//localhost:1521/FREEPDB1
+    username: SYSTEM
+    password: root
+    driver-class-name: oracle.jdbc.OracleDriver
+
   jpa:
     show-sql: true
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
 
-# Springdoc
+  # Flyway Konfiguration
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 1
+    # clean-on-validation-error: true  <-- ENTFERNEN oder auskommentieren
+    # clean-disabled: false            <-- ENTFERNEN oder auskommentieren
+
+# Springdoc (Swagger UI)
 springdoc:
   show-actuator: true
 
-# API key definition
+# API key definition (für eTutor Starter)
 clients:
   api-keys:
     - name: task-administration
@@ -33,3 +55,16 @@ clients:
       key: plag-check-key
       roles:
         - READ_SUBMISSION
+
+# --- Konfiguration für das ORV Modul ---
+jdbc:
+  url: jdbc:oracle:thin:@//localhost:1521/FREEPDB1
+  admin:
+    username: SYSTEM
+    password: root
+  executor:
+    username: SYSTEM
+    password: root
+  max-pool-size: 10
+  max-lifetime: 1800000
+  connection-timeout: 30000
