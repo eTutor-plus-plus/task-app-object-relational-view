@@ -48,8 +48,6 @@ class TaskGroupControllerTest {
         this.groupId = group.getId();
     }
 
-    //#region --- GET ---
-
     @Test
     void getShouldReturnOk() {
         given()
@@ -91,10 +89,6 @@ class TaskGroupControllerTest {
             .log().ifValidationFails()
             .statusCode(403);
     }
-
-    //#endregion
-
-    //#region --- CREATE ---
 
     @Test
     void createShouldReturnCreated() {
@@ -158,10 +152,6 @@ class TaskGroupControllerTest {
             .log().ifValidationFails()
             .statusCode(403);
     }
-
-    //#endregion
-
-    //#region --- UPDATE ---
 
     @Test
     void updateShouldReturnOk() {
@@ -238,10 +228,6 @@ class TaskGroupControllerTest {
             .statusCode(403);
     }
 
-    //#endregion
-
-    //#region --- DELETE ---
-
     @Test
     void deleteShouldReturnNoContent() {
         given()
@@ -278,10 +264,6 @@ class TaskGroupControllerTest {
             .statusCode(403);
     }
 
-    //#endregion
-
-    //#region --- mapToDto ---
-
     @Test
     void mapToDto() {
         var group = new OrViewTaskGroup();
@@ -297,6 +279,4 @@ class TaskGroupControllerTest {
         assertEquals("INSERT INTO tbl VALUES (1);", result.submitInserts());
         assertEquals("INSERT INTO tbl VALUES (2);", result.diagnoseInserts());
     }
-
-    //#endregion
 }

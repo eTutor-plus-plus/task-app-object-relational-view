@@ -1348,12 +1348,12 @@ public class EvaluationService {
             for (int i = 0; i < teacherMultisetAll.size(); i++) {
                 String t = teacherMultisetAll.get(i);
                 String s = studentMultisetAll.get(i);
-                if (!t.startsWith("make_ref") && s.startsWith("make_ref")) return true;
+                if (!looksLikeMakeRef(t) && looksLikeMakeRef(s)) return true;
             }
             List<String> teacherMultisetPrim = teacherMultisetAll.stream()
-                .filter(c -> !c.startsWith("make_ref")).toList();
+                .filter(c -> !looksLikeMakeRef(c)).toList();
             List<String> studentMultisetPrim = studentMultisetAll.stream()
-                .filter(c -> !c.startsWith("make_ref")).toList();
+                .filter(c -> !looksLikeMakeRef(c)).toList();
             return studentMultisetPrim.size() == teacherMultisetPrim.size()
                 && !studentMultisetPrim.equals(teacherMultisetPrim)
                 && new HashSet<>(studentMultisetPrim).equals(new HashSet<>(teacherMultisetPrim));
@@ -1488,10 +1488,10 @@ public class EvaluationService {
                 String t = teacherMultiset.get(i);
                 String s = studentMultiset.get(i);
                 if (!t.equals(s)) {
-                    if (t.startsWith("make_ref") && s.startsWith("make_ref")) continue;
+                    if (looksLikeMakeRef(t) && looksLikeMakeRef(s)) continue;
                     boolean sExistsInTeacher;
-                    if (s.startsWith("make_ref")) {
-                        sExistsInTeacher = teacherMultiset.stream().anyMatch(c -> c.startsWith("make_ref"));
+                    if (looksLikeMakeRef(s)) {
+                        sExistsInTeacher = teacherMultiset.stream().anyMatch(this::looksLikeMakeRef);
                     } else {
                         sExistsInTeacher = teacherMultiset.contains(s);
                     }

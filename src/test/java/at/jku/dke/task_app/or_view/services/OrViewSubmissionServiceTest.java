@@ -38,7 +38,6 @@ class OrViewSubmissionServiceTest {
     @Test
     void mapSubmissionToSubmissionData_shouldMapCorrectly() {
 
-        // Arrange
         OrViewSubmission submission =
             new OrViewSubmission("SELECT 1");
 

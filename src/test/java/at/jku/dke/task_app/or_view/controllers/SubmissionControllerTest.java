@@ -378,7 +378,7 @@ class SubmissionControllerTest {
     }
 
     @Test
-    void diagnoseWrongContent_withoutPenalties_returnsZeroPoints() {
+    void diagnoseWrongContent_withoutPenalties_returnsFullPoints() {
         given()
             .port(port)
             .header(AuthConstants.AUTH_TOKEN_HEADER_NAME, ClientSetupExtension.SUBMIT_API_KEY)
@@ -390,7 +390,23 @@ class SubmissionControllerTest {
             .log().ifValidationFails()
             .statusCode(200)
             .body("grading.maxPoints", equalTo(10))
-            .body("grading.points", equalTo(0));
+            .body("grading.points", equalTo(10));
+    }
+
+    @Test
+    void submitWrongContent_withoutPenalties_returnsFullPoints() {
+        given()
+            .port(port)
+            .header(AuthConstants.AUTH_TOKEN_HEADER_NAME, ClientSetupExtension.SUBMIT_API_KEY)
+            .contentType(ContentType.JSON)
+            .body(submission(taskId, SubmissionMode.SUBMIT, 3, WRONG_CONTENT_SOLUTION))
+            .when()
+            .post("/api/submission")
+            .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body("grading.maxPoints", equalTo(10))
+            .body("grading.points", equalTo(10));
     }
 
     @Test
@@ -560,22 +576,6 @@ class SubmissionControllerTest {
             .body("grading.maxPoints", equalTo(10))
             .body("grading.points", greaterThan(0))
             .body("grading.points", lessThan(10));
-    }
-
-    @Test
-    void submitWrongContent_withoutPenalties_returnsZeroPoints() {
-        given()
-            .port(port)
-            .header(AuthConstants.AUTH_TOKEN_HEADER_NAME, ClientSetupExtension.SUBMIT_API_KEY)
-            .contentType(ContentType.JSON)
-            .body(submission(taskId, SubmissionMode.SUBMIT, 3, WRONG_CONTENT_SOLUTION))
-            .when()
-            .post("/api/submission")
-            .then()
-            .log().ifValidationFails()
-            .statusCode(200)
-            .body("grading.maxPoints", equalTo(10))
-            .body("grading.points", equalTo(0));
     }
 
     @Test
