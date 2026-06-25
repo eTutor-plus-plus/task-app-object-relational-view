@@ -344,7 +344,8 @@ public class EvaluationService {
             || detectedErrors.containsKey(ErrorCategory.INVALID_COLUMN_NAME)
             || detectedErrors.containsKey(ErrorCategory.MISSING_OBJECT_FIELD)
             || detectedErrors.containsKey(ErrorCategory.MISSING_CONSTRUCTOR)
-            || detectedErrors.containsKey(ErrorCategory.WRONG_NESTED_TABLE_TYPE))
+            || detectedErrors.containsKey(ErrorCategory.WRONG_NESTED_TABLE_TYPE)
+            || detectedErrors.containsKey(ErrorCategory.WRONG_COLUMN_ORDER))
             && !detectedErrors.containsKey(ErrorCategory.MISSING_NESTED_TABLE);
     }
 
@@ -1117,6 +1118,11 @@ public class EvaluationService {
             if (!teacherCtorArgs.equals(studentCtorArgs)) {
                 categories.merge(ErrorCategory.MISSING_CONSTRUCTOR, 1, Integer::max);
             }
+        } else if (hasSwappedColumns(studentSql, teacherSql, typeNames)) {
+            int wrongPositions = countWrongPositions(studentSql, teacherSql, typeNames);
+            if (wrongPositions > 0) {
+                categories.put(ErrorCategory.WRONG_COLUMN_ORDER, wrongPositions);
+            }
         } else if (teacherCols != studentCols) {
             categories.putIfAbsent(ErrorCategory.MISSING_PRIMITIVE_FIELD, 1);
         }
@@ -1127,7 +1133,7 @@ public class EvaluationService {
                                      String studentSql, String teacherSql) {
         if (whereClausesDiffer(studentSql, teacherSql)) {
             categories.putIfAbsent(ErrorCategory.WRONG_CONTENT, 1);
-        } else {
+        } else if (!categories.containsKey(ErrorCategory.WRONG_COLUMN_ORDER)) {
             categories.putIfAbsent(ErrorCategory.MISSING_PRIMITIVE_FIELD, 1);
         }
     }

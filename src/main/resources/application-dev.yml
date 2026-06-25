@@ -8,12 +8,12 @@ logging:
 
 # Spring Configuration
 spring:
-  # Docker Compose deaktivieren
+  # Docker Compose
   docker:
     compose:
       enabled: true
 
-  # Haupt-Datenbank für eTutor Metadaten
+  # Main database for eTutor metadata
   datasource:
     url: jdbc:oracle:thin:@//localhost:1521/FREEPDB1
     username: SYSTEM
@@ -27,19 +27,17 @@ spring:
     properties:
       hibernate:
 
-  # Flyway Konfiguration
+  # Flyway Configuration
   flyway:
     enabled: true
     baseline-on-migrate: true
     baseline-version: 1
-    # clean-on-validation-error: true  <-- ENTFERNEN oder auskommentieren
-    # clean-disabled: false            <-- ENTFERNEN oder auskommentieren
 
 # Springdoc (Swagger UI)
 springdoc:
   show-actuator: true
 
-# API key definition (für eTutor Starter)
+# API key definition (for eTutor Starter)
 clients:
   api-keys:
     - name: task-administration
@@ -56,7 +54,7 @@ clients:
       roles:
         - READ_SUBMISSION
 
-# --- Konfiguration für das ORV Modul ---
+# --- Configuration for the ORV Module ---
 jdbc:
   url: jdbc:oracle:thin:@//localhost:1521/FREEPDB1
   admin:

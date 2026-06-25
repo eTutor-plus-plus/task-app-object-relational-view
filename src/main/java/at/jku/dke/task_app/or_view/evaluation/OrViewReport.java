@@ -176,7 +176,7 @@ public class OrViewReport {
                         expectedConstructorCall, actualConstructorCall,
                         expectedOfType, actualOfType,
                         expectedCastType, actualCastType,
-                        expectedOid, actualOid,
+                        expectedOid,
                         expectedWhereClause, actualWhereClause, expectedColumnOrder, actualColumnOrder),
                     oracleCategory);
 
@@ -405,6 +405,8 @@ public class OrViewReport {
         }
 
         if (msg.contains("ORA-01722") || msg.contains("ORA-61800")) {
+            if (detectedErrors.containsKey(EvaluationService.ErrorCategory.WRONG_COLUMN_ORDER))
+                return EvaluationService.ErrorCategory.WRONG_COLUMN_ORDER;
             if (detectedErrors.containsKey(EvaluationService.ErrorCategory.MISSING_PRIMITIVE_FIELD))
                 return EvaluationService.ErrorCategory.MISSING_PRIMITIVE_FIELD;
             if (detectedErrors.containsKey(EvaluationService.ErrorCategory.WRONG_CONTENT))
@@ -804,7 +806,6 @@ public class OrViewReport {
                                                 List<String> expectedCastType,
                                                 List<String> actualCastType,
                                                 List<String> expectedOid,
-                                                List<String> actualOid,
                                                 List<String> expectedWhereClause,
                                                 List<String> actualWhereClause,
                                                 List<String> expectedColumnOrder,
