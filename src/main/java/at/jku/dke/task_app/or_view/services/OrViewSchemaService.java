@@ -2,6 +2,9 @@ package at.jku.dke.task_app.or_view.services;
 
 import java.sql.SQLException;
 
+/**
+ * Interface for managing temporary Oracle schemas used during evaluation.
+ */
 public interface OrViewSchemaService extends AutoCloseable {
 
     void initForSchema(String schemaName) throws SQLException;

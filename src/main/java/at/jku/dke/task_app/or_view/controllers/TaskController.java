@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
 
+/**
+ * REST controller for managing OR-View tasks.
+ */
 @RestController
 public class TaskController extends BaseTaskController<OrViewTask, TaskDto, ModifyOrViewTaskDto> {
 

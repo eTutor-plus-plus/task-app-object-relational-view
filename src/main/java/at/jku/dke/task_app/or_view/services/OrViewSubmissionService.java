@@ -11,6 +11,9 @@ import at.jku.dke.task_app.or_view.dto.SubmissionDto;
 import at.jku.dke.task_app.or_view.evaluation.EvaluationService;
 import org.springframework.stereotype.Service;
 
+/**
+ * Service for processing student submissions and delegating evaluation to the EvaluationService.
+ */
 @Service
 public class OrViewSubmissionService extends BaseSubmissionService<OrViewTask, OrViewSubmission, SubmissionDto> {
 

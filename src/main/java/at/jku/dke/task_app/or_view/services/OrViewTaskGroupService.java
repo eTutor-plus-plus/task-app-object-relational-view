@@ -16,6 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Service for managing OR-View task groups including schema setup and validation.
+ */
 @Service
 public class OrViewTaskGroupService extends BaseTaskGroupService<OrViewTaskGroup, ModifyOrViewTaskGroupDto> {
 

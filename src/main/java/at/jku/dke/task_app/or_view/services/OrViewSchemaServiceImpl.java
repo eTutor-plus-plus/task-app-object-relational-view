@@ -8,6 +8,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+/**
+ * Manages temporary Oracle schemas for isolated evaluation of student submissions.
+ * Handles schema creation, SQL execution, and cleanup.
+ */
 public class OrViewSchemaServiceImpl implements OrViewSchemaService {
 
     private static final Logger LOG = LoggerFactory.getLogger(OrViewSchemaServiceImpl.class);

@@ -4,6 +4,9 @@ import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
+/**
+ * DTO for creating or updating an OR-View task.
+ */
 public record ModifyOrViewTaskDto(
     @NotNull String solution,
     @NotNull String testQuery,

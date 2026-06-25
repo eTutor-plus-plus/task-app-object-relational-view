@@ -4,6 +4,9 @@ import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
+/**
+ * DTO for returning OR-View task data.
+ */
 public record TaskDto(
     @NotNull String solution,
     @NotNull String testQuery,

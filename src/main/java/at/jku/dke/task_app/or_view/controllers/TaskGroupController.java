@@ -7,6 +7,9 @@ import at.jku.dke.task_app.or_view.dto.TaskGroupDto;
 import at.jku.dke.task_app.or_view.services.OrViewTaskGroupService;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller for managing OR-View task groups.
+ */
 @RestController
 public class TaskGroupController
     extends BaseTaskGroupController<OrViewTaskGroup, TaskGroupDto, ModifyOrViewTaskGroupDto> {

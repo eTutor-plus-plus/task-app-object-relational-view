@@ -5,6 +5,9 @@ import at.jku.dke.etutor.task_app.dto.SubmissionMode;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
+/**
+ * JPA entity representing a student submission for an OR-View task.
+ */
 @Entity
 @Table(name = "submission")
 @AttributeOverride(name = "mode", column = @Column(name = "submission_mode", nullable = false))

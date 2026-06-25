@@ -12,6 +12,10 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Generates structured feedback and calculates points based on detected error categories.
+ * Supports four feedback levels ranging from simple correct/incorrect to detailed error descriptions.
+ */
 public class OrViewReport {
 
     private final MessageSource messageSource;
@@ -22,6 +26,40 @@ public class OrViewReport {
         this.messageSource = messageSource;
     }
 
+    /**
+     * Builds the grading result including feedback criteria and point calculation.
+     *
+     * @param task            the task configuration with penalties and max points
+     * @param mode            the submission mode (RUN, DIAGNOSE, or SUBMIT)
+     * @param level           the feedback detail level (0-3)
+     * @param student         the query result of the student's view, or null if execution failed
+     * @param teacher         the query result of the reference solution, or null
+     * @param correct         whether the submission is fully correct
+     * @param error           the Oracle SQL exception, or null if execution succeeded
+     * @param locale          the locale for localized feedback messages
+     * @param oidValid        whether the object identifier matches the expected value
+     * @param typeValid       whether the view object type is correct
+     * @param superviewValid  whether the UNDER relationship is correct
+     * @param makeRefMissing  whether a MAKE_REF expression is missing
+     * @param detectedErrors  map of error categories to their occurrence count
+     * @param missingColumnNames   list of column names missing from the student solution
+     * @param extraColumnNames     list of extra or invalid column names in the student solution
+     * @param expectedMakeRefArgs  expected MAKE_REF arguments from the reference solution
+     * @param actualMakeRefArgs    actual MAKE_REF arguments from the student solution
+     * @param expectedConstructorCall expected constructor call from the reference solution
+     * @param actualConstructorCall   actual constructor call from the student solution
+     * @param expectedOfType     expected object type in the OF clause
+     * @param actualOfType       actual object type in the OF clause
+     * @param expectedCastType   expected collection type in the CAST expression
+     * @param actualCastType     actual collection type in the CAST expression
+     * @param expectedOid        expected object identifier value
+     * @param actualOid          actual object identifier value
+     * @param expectedWhereClause expected WHERE/JOIN clauses from the reference solution
+     * @param actualWhereClause   actual WHERE/JOIN clauses from the student solution
+     * @param expectedColumnOrder expected column order from the reference solution
+     * @param actualColumnOrder   actual column order from the student solution
+     * @return a GradingDto with points, general feedback, and detailed criteria
+     */
     public GradingDto build(
         OrViewTask task,
         SubmissionMode mode,

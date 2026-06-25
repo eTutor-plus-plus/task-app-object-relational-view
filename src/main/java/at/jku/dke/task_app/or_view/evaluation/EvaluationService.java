@@ -17,6 +17,10 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Central service for evaluating student submissions of Object-Relational Views.
+ * Coordinates schema creation, SQL execution, error detection, and feedback generation.
+ */
 @Service
 public class EvaluationService {
 
@@ -60,6 +64,13 @@ public class EvaluationService {
         this.messageSource = messageSource;
     }
 
+    /**
+     * Evaluates a student submission by executing it in an isolated Oracle schema
+     * and comparing the result against the reference solution.
+     *
+     * @param dto the submission data including student SQL, task ID, mode, and feedback level
+     * @return a GradingDto containing points, feedback, and detected error categories
+     */
     public GradingDto evaluate(SubmitSubmissionDto<SubmissionDto> dto) {
 
         Locale locale = (dto.language() != null && !dto.language().isBlank())

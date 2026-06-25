@@ -6,6 +6,9 @@ import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 
+/**
+ * JPA entity representing an OR-View task with solution, test query, and penalty configuration.
+ */
 @Entity
 @Table(name = "task")
 public class OrViewTask extends BaseTask implements TaskInGroup<OrViewTaskGroup> {

@@ -3,6 +3,9 @@ package at.jku.dke.task_app.or_view.data.entities;
 import at.jku.dke.etutor.task_app.data.entities.BaseTaskGroup;
 import jakarta.persistence.*;
 
+/**
+ * JPA entity representing an OR-View task group with schema definitions and test data.
+ */
 @Entity
 @Table(name = "task_group")
 public class OrViewTaskGroup extends BaseTaskGroup {
@@ -27,7 +30,6 @@ public class OrViewTaskGroup extends BaseTaskGroup {
 
     public OrViewTaskGroup() {}
 
-    // Getter und Setter für Title und Description hinzufügen
     public String getTitle() {
         return title;
     }

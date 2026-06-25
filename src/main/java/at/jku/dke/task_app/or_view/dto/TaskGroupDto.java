@@ -4,6 +4,9 @@ import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
 
+/**
+ * DTO for returning OR-View task group data.
+ */
 public record TaskGroupDto(
     @NotNull String intensionalSchema,
     @NotNull String extensionalSchema,

@@ -8,6 +8,11 @@ import org.springframework.stereotype.Service;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+/**
+ * Manages HikariCP connection pools for admin and executor database access.
+ * Admin connections are used for schema creation and deletion,
+ * executor connections for SQL execution during evaluation.
+ */
 @Service
 public class OrViewDataSource implements AutoCloseable {
 

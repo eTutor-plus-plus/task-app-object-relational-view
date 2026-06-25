@@ -2,6 +2,9 @@ package at.jku.dke.task_app.or_view.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+/**
+ * Configuration properties for Oracle JDBC connections used by the ORV module.
+ */
 @ConfigurationProperties(prefix = "jdbc")
 public record JdbcConnectionParameters(
     String url,

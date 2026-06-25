@@ -9,6 +9,10 @@ import java.sql.Struct;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+/**
+ * Converts Oracle-specific JDBC types (Struct, Array) into readable string representations
+ * for result comparison between student and reference solutions.
+ */
 public class OracleTypeConverter {
 
     private static final Logger LOG = LoggerFactory.getLogger(OracleTypeConverter.class);
