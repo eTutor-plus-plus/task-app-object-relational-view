@@ -22,6 +22,11 @@ public class OrViewReport {
 
     private record Entry(String detail, EvaluationService.ErrorCategory category) {}
 
+    /**
+     * Creates a new OrViewReport.
+     *
+     * @param messageSource the message source for localized feedback messages
+     */
     public OrViewReport(MessageSource messageSource) {
         this.messageSource = messageSource;
     }
@@ -121,6 +126,8 @@ public class OrViewReport {
                 isStructureError = true;
             } else if (msg.contains("ORA-01722") || msg.contains("ORA-61800")) {
                 isStructureError = true;
+            } else if (msg.contains("ORA-00918")) {
+                isStructureError = true;
             } else if (msg.contains("ORA-30738") || msg.contains("ORA-04043") ||
                 msg.contains("ORA-00942") || msg.contains("ORA-00903") ||
                 msg.contains("ORA-00917") || msg.contains("ORA-00971") ||
@@ -214,7 +221,7 @@ public class OrViewReport {
                         expectedConstructorCall, actualConstructorCall,
                         expectedOfType, actualOfType,
                         expectedCastType, actualCastType,
-                        expectedOid,
+                        expectedOid, actualOid,
                         expectedWhereClause, actualWhereClause, expectedColumnOrder, actualColumnOrder),
                     oracleCategory);
 
@@ -451,6 +458,10 @@ public class OrViewReport {
                 return EvaluationService.ErrorCategory.WRONG_CONTENT;
             return null;
         }
+
+        if (msg.contains("ORA-00918"))
+            return detectedErrors.containsKey(EvaluationService.ErrorCategory.INVALID_COLUMN_NAME)
+                ? EvaluationService.ErrorCategory.INVALID_COLUMN_NAME : null;
 
         if (detectedErrors.containsKey(EvaluationService.ErrorCategory.WRONG_COLUMN_ORDER))
             return EvaluationService.ErrorCategory.WRONG_COLUMN_ORDER;
@@ -844,6 +855,7 @@ public class OrViewReport {
                                                 List<String> expectedCastType,
                                                 List<String> actualCastType,
                                                 List<String> expectedOid,
+                                                List<String> actualOid,
                                                 List<String> expectedWhereClause,
                                                 List<String> actualWhereClause,
                                                 List<String> expectedColumnOrder,
@@ -855,6 +867,12 @@ public class OrViewReport {
         if ("MISSING_UNDER".equals(msg))
             return messageSource.getMessage("error.invalidSuperview", null, locale);
 
+        if (msg.contains("ORA-00918")) {
+            String base = messageSource.getMessage("error.ambiguousColumn.detail", null, locale);
+            String detail = extractOracleDetail(msg);
+            return detail != null ? base + " - " + detail : base;
+        }
+
         if (level >= 2) {
             EvaluationService.ErrorCategory oracleCategory =
                 resolveOraclePrimaryCategory(error, oidValid, detectedErrors);
@@ -865,7 +883,8 @@ public class OrViewReport {
                     expectedConstructorCall, actualConstructorCall,
                     expectedOfType, actualOfType,
                     expectedCastType, actualCastType,
-                    expectedOid, expectedWhereClause, actualWhereClause, expectedColumnOrder, actualColumnOrder);
+                    actualOid,
+                    expectedWhereClause, actualWhereClause, expectedColumnOrder, actualColumnOrder);
             }
             if (level == 2) {
                 String location = resolveOracleLocation(msg, locale, oidValid);
@@ -885,6 +904,8 @@ public class OrViewReport {
             return messageSource.getMessage("error.location.castMultiset", null, locale);
         if (msg.contains("ORA-00936"))
             return messageSource.getMessage("error.location.expression", null, locale);
+        if (msg.contains("ORA-00918"))
+            return messageSource.getMessage("error.location.invalidColumn", null, locale);
         if (msg.contains("ORA-01722") || msg.contains("ORA-61800"))
             return messageSource.getMessage("error.location.whereClause", null, locale);
         if (msg.contains("ORA-00909"))
@@ -950,6 +971,11 @@ public class OrViewReport {
             return messageSource.getMessage("error.invalidDatatypeComparison.detail", null, locale);
         if (msg.contains("ORA-00909"))
             return messageSource.getMessage("error.invalidMakeRef.detail", null, locale);
+        if (msg.contains("ORA-00918")) {
+            String base = messageSource.getMessage("error.ambiguousColumn.detail", null, locale);
+            String detail = extractOracleDetail(msg);
+            return detail != null ? base + " - " + detail : base;
+        }
         if (msg.contains("ORA-00904")) {
             String msgUpper = msg.toUpperCase();
             if (msgUpper.contains("MAKE_REF") || msgUpper.contains("MAKE_EF")

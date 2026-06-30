@@ -17,6 +17,13 @@ public class OracleTypeConverter {
 
     private static final Logger LOG = LoggerFactory.getLogger(OracleTypeConverter.class);
 
+    /**
+     * Converts an Oracle JDBC object to a readable string representation.
+     *
+     * @param val the Oracle object (Struct, Array, or primitive)
+     * @return a string representation of the object
+     * @throws SQLException if a database access error occurs
+     */
     public static String convertOracleObject(Object val) throws SQLException {
         if (val == null) {
             return "NULL";

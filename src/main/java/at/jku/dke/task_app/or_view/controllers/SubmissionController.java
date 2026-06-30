@@ -11,6 +11,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class SubmissionController extends BaseSubmissionController<SubmissionDto> {
 
+    /**
+     * Creates a new SubmissionController.
+     *
+     * @param submissionService the service for processing submissions
+     */
     public SubmissionController(OrViewSubmissionService submissionService) {
         super(submissionService);
     }

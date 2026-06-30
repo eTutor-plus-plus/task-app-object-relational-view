@@ -24,7 +24,6 @@ class OrViewTaskTest {
 
     @Test
     void testGetSetDescription() {
-        // Arrange
         var task = new OrViewTask();
         var expected = "description-test";
 

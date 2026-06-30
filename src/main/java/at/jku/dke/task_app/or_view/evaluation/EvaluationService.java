@@ -24,8 +24,17 @@ import java.util.regex.Pattern;
 @Service
 public class EvaluationService {
 
+    /**
+     * Result of a test query execution containing column names and row data.
+     *
+     * @param columns the column names
+     * @param rows the row data as string values
+     */
     public record QueryResult(List<String> columns, List<List<String>> rows) {}
 
+    /**
+     * Error categories for classifying detected errors in student submissions.
+     */
     public enum ErrorCategory {
         MISSING_PRIMITIVE_FIELD,
         MISSING_OBJECT_FIELD,
@@ -56,6 +65,13 @@ public class EvaluationService {
     private final OrViewDataSource dataSource;
     private final MessageSource messageSource;
 
+    /**
+     * Creates a new EvaluationService.
+     *
+     * @param taskRepository the task repository for loading tasks
+     * @param dataSource     the data source for database connections
+     * @param messageSource  the message source for localized messages
+     */
     public EvaluationService(OrViewTaskRepository taskRepository,
                              OrViewDataSource dataSource,
                              MessageSource messageSource) {
@@ -802,6 +818,10 @@ public class EvaluationService {
             if (whereClausesDiffer(studentSql, teacherSql)) {
                 categories.put(ErrorCategory.WRONG_CONTENT, 1);
             } else if (!categories.containsKey(ErrorCategory.WRONG_COLUMN_ORDER)) {
+                boolean structuralColumnErrors =
+                    categories.containsKey(ErrorCategory.MISSING_PRIMITIVE_FIELD)
+                        || categories.containsKey(ErrorCategory.INVALID_COLUMN_NAME);
+
                 boolean onlyColumnNameErrors = !categories.isEmpty()
                     && !categories.containsKey(ErrorCategory.MISSING_PRIMITIVE_FIELD)
                     && !categories.containsKey(ErrorCategory.MISSING_OBJECT_FIELD)
@@ -811,7 +831,8 @@ public class EvaluationService {
                     && !categories.containsKey(ErrorCategory.WRONG_VIEW_OBJECT_TYPE)
                     && !categories.containsKey(ErrorCategory.WRONG_OID)
                     && categories.containsKey(ErrorCategory.INVALID_COLUMN_NAME);
-                if (!onlyColumnNameErrors)
+
+                if (!onlyColumnNameErrors && !structuralColumnErrors)
                     categories.put(ErrorCategory.WRONG_CONTENT, 1);
             }
         }
@@ -847,8 +868,10 @@ public class EvaluationService {
             String s = studentColsAll.get(i);
             LOG.info("outer pos {}: t={}, s={}", i, t, s);
             if (!t.startsWith("__") && !s.startsWith("__") && !t.equals(s)) {
-                wrongPositions++;
-                LOG.info("wrongPositions++ primitive mismatch");
+                if (teacherColsAll.contains(s)) {
+                    wrongPositions++;
+                    LOG.info("wrongPositions++ primitive mismatch");
+                }
             } else if (!t.startsWith("__") && s.startsWith("__")) {
                 if (!(s.equals("__makeref__") && looksLikeMakeRef(t))
                     && !(s.equals("__object__") && t.contains("("))) {
@@ -894,11 +917,25 @@ public class EvaluationService {
         List<String> studentColsFB = SchemaTypeAnalyzer.extractOuterColumnNames(studentSql, typeNames)
             .stream().filter(c -> !c.equals("__nested__")).toList();
 
-        int minSize = Math.min(teacherColsFB.size(), studentColsFB.size());
+        // Filter to common columns to avoid counting shifted positions due to extra/missing columns
+        Set<String> commonSet = new HashSet<>(teacherColsFB);
+        commonSet.retainAll(new HashSet<>(studentColsFB));
+
+        List<String> teacherFiltered = teacherColsFB.stream()
+            .filter(commonSet::contains).toList();
+        List<String> studentFiltered = new ArrayList<>();
+        List<String> teacherRemaining = new ArrayList<>(teacherFiltered);
+        for (String s : studentColsFB) {
+            if (teacherRemaining.contains(s)) {
+                studentFiltered.add(s);
+                teacherRemaining.remove(s);
+            }
+        }
+
         int wrongPos = 0;
-        for (int i = 0; i < minSize; i++) {
-            String t = teacherColsFB.get(i);
-            String s = studentColsFB.get(i);
+        for (int i = 0; i < Math.min(teacherFiltered.size(), studentFiltered.size()); i++) {
+            String t = teacherFiltered.get(i);
+            String s = studentFiltered.get(i);
             if (!t.equals(s)) {
                 if (!t.startsWith("__") && s.startsWith("__")) {
                     wrongPos++;
@@ -1071,6 +1108,8 @@ public class EvaluationService {
             handleOra00932(categories, studentSql, teacherSql, typeNames);
         } else if (msg.contains("ORA-00904")) {
             handleOra00904(msg, categories, studentSql, teacherSql, oidValid, typeNames);
+        } else if (msg.contains("ORA-00918")) {
+            categories.putIfAbsent(ErrorCategory.INVALID_COLUMN_NAME, 1);
         } else if (msg.contains("ORA-01722") || msg.contains("ORA-61800")) {
             handleOraWhereError(categories, studentSql, teacherSql);
         }
@@ -1360,6 +1399,7 @@ public class EvaluationService {
         List<String> teacherMultisetAll = SchemaTypeAnalyzer.extractMultisetColumnNames(teacherSql);
         List<String> studentMultisetAll = SchemaTypeAnalyzer.extractMultisetColumnNames(studentSql);
 
+        // Multiset columns - same size
         if (teacherMultisetAll.size() == studentMultisetAll.size()
             && !teacherMultisetAll.equals(studentMultisetAll)) {
             for (int i = 0; i < teacherMultisetAll.size(); i++) {
@@ -1371,9 +1411,57 @@ public class EvaluationService {
                 .filter(c -> !looksLikeMakeRef(c)).toList();
             List<String> studentMultisetPrim = studentMultisetAll.stream()
                 .filter(c -> !looksLikeMakeRef(c)).toList();
-            return studentMultisetPrim.size() == teacherMultisetPrim.size()
+            if (studentMultisetPrim.size() == teacherMultisetPrim.size()
                 && !studentMultisetPrim.equals(teacherMultisetPrim)
-                && new HashSet<>(studentMultisetPrim).equals(new HashSet<>(teacherMultisetPrim));
+                && new HashSet<>(studentMultisetPrim).equals(new HashSet<>(teacherMultisetPrim))) {
+                return true;
+            }
+
+            // Fallback: filter to common columns and check order
+            Set<String> commonSet = new HashSet<>(teacherMultisetPrim);
+            commonSet.retainAll(new HashSet<>(studentMultisetPrim));
+            List<String> teacherFiltered = teacherMultisetPrim.stream()
+                .filter(commonSet::contains).toList();
+            List<String> studentFiltered = studentMultisetPrim.stream()
+                .filter(commonSet::contains).toList();
+            if (studentFiltered.size() >= 2 && !studentFiltered.equals(teacherFiltered)) {
+                return true;
+            }
+        }
+
+        // Multiset columns - different size: filter both sides to common columns
+        if (!teacherMultisetAll.isEmpty() && !studentMultisetAll.isEmpty()
+            && teacherMultisetAll.size() != studentMultisetAll.size()) {
+            // Check MAKE_REF position
+            if (SchemaTypeAnalyzer.multisetContainsMakeRef(teacherSql)
+                && SchemaTypeAnalyzer.multisetContainsMakeRef(studentSql)) {
+                int tPos = -1, sPos = -1;
+                for (int i = 0; i < teacherMultisetAll.size(); i++) {
+                    if (looksLikeMakeRef(teacherMultisetAll.get(i))) { tPos = i; break; }
+                }
+                for (int i = 0; i < studentMultisetAll.size(); i++) {
+                    if (looksLikeMakeRef(studentMultisetAll.get(i))) { sPos = i; break; }
+                }
+                if (tPos != sPos) return true;
+            }
+
+            List<String> teacherMultisetPrim = teacherMultisetAll.stream()
+                .filter(c -> !looksLikeMakeRef(c)).toList();
+            List<String> studentMultisetPrim = studentMultisetAll.stream()
+                .filter(c -> !looksLikeMakeRef(c)).toList();
+
+            Set<String> commonSet = new HashSet<>(teacherMultisetPrim);
+            commonSet.retainAll(new HashSet<>(studentMultisetPrim));
+
+            List<String> teacherFiltered = teacherMultisetPrim.stream()
+                .filter(commonSet::contains).toList();
+            List<String> studentFiltered = studentMultisetPrim.stream()
+                .filter(commonSet::contains).toList();
+
+            if (studentFiltered.size() >= 2
+                && !studentFiltered.equals(teacherFiltered)) {
+                return true;
+            }
         }
 
         return false;
@@ -1477,31 +1565,55 @@ public class EvaluationService {
         int wrong = 0;
 
         // Outer columns
-        for (int i = 0; i < Math.min(studentCols.size(), teacherCols.size()); i++) {
-            String t = teacherCols.get(i);
-            String s = studentCols.get(i);
-            if (!t.equals(s)) {
-                if (t.startsWith("__makeref__") && looksLikeMakeRef(s)) continue;
-                if (s.startsWith("__makeref__") && looksLikeMakeRef(t)) continue;
-                if (t.equals("__object__") && s.contains("(")) continue;
-                if (s.equals("__object__") && t.contains("(")) continue;
-                boolean sExistsInTeacher;
-                if (s.startsWith("__makeref__")) {
-                    sExistsInTeacher = teacherCols.stream().anyMatch(c -> c.equals("__makeref__"));
-                } else if (s.startsWith("__object__")) {
-                    sExistsInTeacher = teacherCols.stream().anyMatch(c -> c.equals("__object__"));
-                } else {
-                    sExistsInTeacher = teacherCols.contains(s);
+        if (studentCols.size() == teacherCols.size()) {
+            for (int i = 0; i < studentCols.size(); i++) {
+                String t = teacherCols.get(i);
+                String s = studentCols.get(i);
+                if (!t.equals(s)) {
+                    if (t.startsWith("__makeref__") && looksLikeMakeRef(s)) continue;
+                    if (s.startsWith("__makeref__") && looksLikeMakeRef(t)) continue;
+                    if (t.equals("__object__") && s.contains("(")) continue;
+                    if (s.equals("__object__") && t.contains("(")) continue;
+                    boolean sExistsInTeacher;
+                    if (s.startsWith("__makeref__")) {
+                        sExistsInTeacher = teacherCols.stream().anyMatch(c -> c.equals("__makeref__"));
+                    } else if (s.startsWith("__object__")) {
+                        sExistsInTeacher = teacherCols.stream().anyMatch(c -> c.equals("__object__"));
+                    } else {
+                        sExistsInTeacher = teacherCols.contains(s);
+                    }
+                    if (sExistsInTeacher) {
+                        wrong++;
+                    }
                 }
-                if (sExistsInTeacher) {
+            }
+        } else {
+            // Different size: filter to common columns
+            Set<String> commonSet = new HashSet<>(teacherCols);
+            commonSet.retainAll(new HashSet<>(studentCols));
+
+            List<String> teacherFiltered = teacherCols.stream()
+                .filter(commonSet::contains).toList();
+            List<String> studentFiltered = new ArrayList<>();
+            List<String> teacherRemaining = new ArrayList<>(teacherFiltered);
+            for (String s : studentCols) {
+                if (teacherRemaining.contains(s)) {
+                    studentFiltered.add(s);
+                    teacherRemaining.remove(s);
+                }
+            }
+
+            for (int i = 0; i < Math.min(teacherFiltered.size(), studentFiltered.size()); i++) {
+                if (!teacherFiltered.get(i).equals(studentFiltered.get(i))) {
                     wrong++;
                 }
             }
         }
 
-        // Multiset columns
-        if (!studentMultiset.isEmpty() && !teacherMultiset.isEmpty()) {
-            for (int i = 0; i < Math.min(studentMultiset.size(), teacherMultiset.size()); i++) {
+        // Multiset columns - same size
+        if (!studentMultiset.isEmpty() && !teacherMultiset.isEmpty()
+            && studentMultiset.size() == teacherMultiset.size()) {
+            for (int i = 0; i < studentMultiset.size(); i++) {
                 String t = teacherMultiset.get(i);
                 String s = studentMultiset.get(i);
                 if (!t.equals(s)) {
@@ -1515,6 +1627,69 @@ public class EvaluationService {
                     if (sExistsInTeacher) {
                         wrong++;
                     }
+                }
+            }
+
+            // Fallback: if no swaps found above, check common columns
+            if (wrong == 0) {
+                List<String> teacherPrim = teacherMultiset.stream()
+                    .filter(c -> !looksLikeMakeRef(c)).toList();
+                List<String> studentPrim = studentMultiset.stream()
+                    .filter(c -> !looksLikeMakeRef(c)).toList();
+                Set<String> commonSet = new HashSet<>(teacherPrim);
+                commonSet.retainAll(new HashSet<>(studentPrim));
+                List<String> teacherFiltered = teacherPrim.stream()
+                    .filter(commonSet::contains).toList();
+                List<String> studentFiltered = studentPrim.stream()
+                    .filter(commonSet::contains).toList();
+                for (int i = 0; i < Math.min(teacherFiltered.size(), studentFiltered.size()); i++) {
+                    if (!teacherFiltered.get(i).equals(studentFiltered.get(i))) {
+                        wrong++;
+                    }
+                }
+            }
+        }
+
+        // Multiset columns - different size: filter both sides to common columns
+        if (!studentMultiset.isEmpty() && !teacherMultiset.isEmpty()
+            && studentMultiset.size() != teacherMultiset.size()) {
+            // Check MAKE_REF position
+            if (SchemaTypeAnalyzer.multisetContainsMakeRef(teacherSql)
+                && SchemaTypeAnalyzer.multisetContainsMakeRef(studentSql)) {
+                int tPos = -1, sPos = -1;
+                for (int i = 0; i < teacherMultiset.size(); i++) {
+                    if (looksLikeMakeRef(teacherMultiset.get(i))) { tPos = i; break; }
+                }
+                for (int i = 0; i < studentMultiset.size(); i++) {
+                    if (looksLikeMakeRef(studentMultiset.get(i))) { sPos = i; break; }
+                }
+                if (tPos != sPos) {
+                    wrong++;
+                }
+            }
+
+            List<String> teacherPrim = teacherMultiset.stream()
+                .filter(c -> !looksLikeMakeRef(c)).toList();
+            List<String> studentPrim = studentMultiset.stream()
+                .filter(c -> !looksLikeMakeRef(c)).toList();
+
+            Set<String> commonSet = new HashSet<>(teacherPrim);
+            commonSet.retainAll(new HashSet<>(studentPrim));
+
+            List<String> teacherFiltered = teacherPrim.stream()
+                .filter(commonSet::contains).toList();
+            List<String> studentFiltered = new ArrayList<>();
+            List<String> teacherRemaining = new ArrayList<>(teacherFiltered);
+            for (String s : studentPrim) {
+                if (teacherRemaining.contains(s)) {
+                    studentFiltered.add(s);
+                    teacherRemaining.remove(s);
+                }
+            }
+
+            for (int i = 0; i < Math.min(teacherFiltered.size(), studentFiltered.size()); i++) {
+                if (!teacherFiltered.get(i).equals(studentFiltered.get(i))) {
+                    wrong++;
                 }
             }
         }

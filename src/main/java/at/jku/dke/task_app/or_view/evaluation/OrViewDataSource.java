@@ -19,6 +19,11 @@ public class OrViewDataSource implements AutoCloseable {
     private final HikariDataSource adminDataSource;
     private final HikariDataSource executorDataSource;
 
+    /**
+     * Creates a new OrViewDataSource with connection pools based on the given parameters.
+     *
+     * @param parameters the JDBC connection configuration
+     */
     public OrViewDataSource(JdbcConnectionParameters parameters) {
         this.adminDataSource = new HikariDataSource(buildAdminConfig(parameters));
         this.executorDataSource = new HikariDataSource(buildExecutorConfig(parameters));

@@ -25,6 +25,13 @@ public class OrViewTaskGroupService extends BaseTaskGroupService<OrViewTaskGroup
     private final OrViewDataSource dataSource;
     private final MessageSource messageSource;
 
+    /**
+     * Creates a new OrViewTaskGroupService.
+     *
+     * @param repository    the task group repository
+     * @param dataSource    the data source for schema operations
+     * @param messageSource the message source for localized messages
+     */
     public OrViewTaskGroupService(OrViewTaskGroupRepository repository,
                                   OrViewDataSource dataSource,
                                   MessageSource messageSource) {

@@ -19,10 +19,16 @@ public class OrViewSchemaServiceImpl implements OrViewSchemaService {
     private final OrViewDataSource dataSource;
     private Connection currentConnection;
 
+    /**
+     * Creates a new OrViewSchemaServiceImpl.
+     *
+     * @param dataSource the data source for obtaining database connections
+     */
     public OrViewSchemaServiceImpl(OrViewDataSource dataSource) {
         this.dataSource = dataSource;
     }
 
+    @Override
     public void initForSchema(String schemaName) throws SQLException {
         if (this.currentConnection != null) {
             throw new SQLException("Service already initialized. Close it first.");

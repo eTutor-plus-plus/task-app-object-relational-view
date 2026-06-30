@@ -51,6 +51,9 @@ public class SchemaTypeAnalyzer {
         return am.find() ? am.group(1) : null;
     }
 
+    /**
+     * Checks whether the SQL contains a CAST(MULTISET(...)) expression.
+     */
     public static boolean hasCastMultiset(String sql) {
         return Pattern.compile("CAST\\s*\\(\\s*MULTISET\\s*\\(", Pattern.CASE_INSENSITIVE)
             .matcher(sql).find();
@@ -64,6 +67,9 @@ public class SchemaTypeAnalyzer {
         return MAKE_REF_PATTERN.matcher(removeMultisetContent(sql)).find();
     }
 
+    /**
+     * Checks whether the MULTISET subquery contains a MAKE_REF expression.
+     */
     public static boolean multisetContainsMakeRef(String sql) {
         Pattern p = Pattern.compile(
             "MULTISET\\s*\\(\\s*SELECT\\s+(.+?)\\s+FROM\\b",
@@ -73,6 +79,9 @@ public class SchemaTypeAnalyzer {
         return m.find() && MAKE_REF_PATTERN.matcher(m.group(1)).find();
     }
 
+    /**
+     * Counts the number of columns in the MULTISET SELECT list.
+     */
     public static int countMultisetColumns(String sql) {
         Pattern p = Pattern.compile(
             "MULTISET\\s*\\(\\s*SELECT\\s+(.+?)\\s+FROM\\b",
@@ -116,6 +125,9 @@ public class SchemaTypeAnalyzer {
         return m.find() ? countTopLevelCommas(m.group(1).trim()) + 1 : 0;
     }
 
+    /**
+     * Extracts the outer SELECT list as a raw string (MULTISET content excluded).
+     */
     public static String extractOuterSelectList(String sql) {
         Pattern p = Pattern.compile(
             "SELECT\\s+(.+?)\\s+FROM\\b",
@@ -196,10 +208,16 @@ public class SchemaTypeAnalyzer {
         return result.toString();
     }
 
+    /**
+     * Extracts all MAKE_REF arguments from the SQL statement.
+     */
     public static List<String> extractMakeRefArgs(String sql) {
         return extractMakeRefArgsFromText(sql);
     }
 
+    /**
+     * Extracts MAKE_REF arguments from within the MULTISET subquery.
+     */
     public static List<String> extractMultisetMakeRefArgs(String sql) {
         Pattern multiset = Pattern.compile(
             "MULTISET\\s*\\(\\s*SELECT\\s+(.+?)\\s+FROM\\b",
@@ -208,6 +226,9 @@ public class SchemaTypeAnalyzer {
         return m.find() ? extractMakeRefArgsFromText(m.group(1)) : Collections.emptyList();
     }
 
+    /**
+     * Extracts JOIN clauses from the outer query (excluding MULTISET content).
+     */
     public static List<String> extractOuterJoinClauses(String sql) {
         List<String> joins = new ArrayList<>();
         Pattern p = Pattern.compile(
@@ -220,6 +241,9 @@ public class SchemaTypeAnalyzer {
         return joins;
     }
 
+    /**
+     * Extracts the WHERE clause from the outer query (excluding MULTISET content).
+     */
     public static String extractOuterWhereClause(String sql) {
         String outer = removeMultisetContent(sql);
         Pattern p = Pattern.compile("\\bWHERE\\b(.+?)(?:ORDER\\s+BY|GROUP\\s+BY|HAVING|;|$)",
@@ -228,6 +252,9 @@ public class SchemaTypeAnalyzer {
         return m.find() ? m.group(1).trim().replaceAll(";$", "").trim() : null;
     }
 
+    /**
+     * Extracts the WHERE clause from within the MULTISET subquery.
+     */
     public static String extractMultisetWhereClause(String sql) {
         Pattern p = Pattern.compile(
             "MULTISET\\s*\\(\\s*SELECT.+?\\bWHERE\\b(.+?)\\)",
@@ -313,6 +340,9 @@ public class SchemaTypeAnalyzer {
         return false;
     }
 
+    /**
+     * Counts the total number of MAKE_REF expressions in the SQL.
+     */
     public static int countMakeRefs(String sql) {
         if (sql == null) return 0;
         Matcher m = MAKE_REF_PATTERN.matcher(sql);
@@ -331,6 +361,9 @@ public class SchemaTypeAnalyzer {
         return args;
     }
 
+    /**
+     * Extracts constructor arguments from the outer SELECT list.
+     */
     public static List<String> extractConstructorArgs(String sql, List<String> typeNames) {
         String outerSelect = extractOuterSelectList(sql);
         if (outerSelect.isEmpty()) return List.of();
@@ -354,12 +387,17 @@ public class SchemaTypeAnalyzer {
         return List.of();
     }
 
+    /**
+     * Extracts MAKE_REF arguments from the outer SELECT list only.
+     */
     public static List<String> extractOuterMakeRefArgs(String sql) {
         String outer = extractOuterSelectList(sql);
         return outer.isEmpty() ? List.of() : extractMakeRefArgsFromText(outer);
     }
 
-    // Extracts table aliases from FROM clause (e.g. "FROM step s" → ["s"])
+    /**
+     * Extracts table aliases from the outer FROM clause.
+     */
     public static List<String> extractFromAliases(String sql) {
         List<String> aliases = new ArrayList<>();
         Pattern p = Pattern.compile(
@@ -369,7 +407,6 @@ public class SchemaTypeAnalyzer {
         if (m.find() && m.group(2) != null) {
             aliases.add(m.group(2).toLowerCase());
         }
-        // JOIN aliases
         Pattern joinP = Pattern.compile(
             "\\bJOIN\\b\\s+(\\w+)(?:\\s+(\\w+))?\\s+ON",
             Pattern.CASE_INSENSITIVE);
@@ -382,7 +419,9 @@ public class SchemaTypeAnalyzer {
         return aliases;
     }
 
-    // Extracts FROM aliases from MULTISET subquery
+    /**
+     * Extracts table aliases from the MULTISET subquery's FROM clause.
+     */
     public static List<String> extractMultisetFromAliases(String sql) {
         List<String> aliases = new ArrayList<>();
         Pattern multiset = Pattern.compile(
@@ -395,11 +434,13 @@ public class SchemaTypeAnalyzer {
         return aliases;
     }
 
+    /**
+     * Finds column references with undefined aliases in the outer SELECT list.
+     */
     public static List<String> countUndefinedAliasRefs(String sql, List<String> fromAliases) {
         return findUndefinedRefs(extractOuterSelectList(sql), fromAliases);
     }
 
-    // Finds column references with undefined aliases in a select list
     private static List<String> findUndefinedRefs(String selectList, List<String> validAliases) {
         List<String> undefined = new ArrayList<>();
         if (selectList == null) return undefined;
@@ -414,6 +455,9 @@ public class SchemaTypeAnalyzer {
         return undefined;
     }
 
+    /**
+     * Finds column references with undefined aliases in the MULTISET SELECT list.
+     */
     public static List<String> countUndefinedMultisetAliasRefs(String sql, List<String> allAliases) {
         Pattern p = Pattern.compile(
             "MULTISET\\s*\\(\\s*SELECT\\s+(.+?)\\s+FROM\\b",
@@ -423,6 +467,9 @@ public class SchemaTypeAnalyzer {
         return findUndefinedRefs(m.group(1), allAliases);
     }
 
+    /**
+     * Counts the number of MAKE_REF expressions inside the MULTISET subquery.
+     */
     public static int countMultisetMakeRefs(String sql) {
         Pattern p = Pattern.compile(
             "MULTISET\\s*\\(.*?MAKE_REF\\s*\\(",
@@ -433,6 +480,9 @@ public class SchemaTypeAnalyzer {
         return count;
     }
 
+    /**
+     * Extracts object type names from the intensional schema (CREATE TYPE ... AS OBJECT).
+     */
     public static List<String> extractObjectTypeNames(String intensionalSchema) {
         List<String> typeNames = new ArrayList<>();
         Pattern p = Pattern.compile(
@@ -446,6 +496,9 @@ public class SchemaTypeAnalyzer {
         return typeNames;
     }
 
+    /**
+     * Checks whether the SQL contains an object constructor call for any of the given type names.
+     */
     public static boolean hasConstructorField(String sql, List<String> typeNames) {
         for (String typeName : typeNames) {
             Pattern p = Pattern.compile("\\b" + Pattern.quote(typeName) + "\\s*\\(", Pattern.CASE_INSENSITIVE);
@@ -453,6 +506,4 @@ public class SchemaTypeAnalyzer {
         }
         return false;
     }
-
-
 }

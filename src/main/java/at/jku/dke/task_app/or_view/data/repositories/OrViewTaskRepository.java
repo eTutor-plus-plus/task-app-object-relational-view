@@ -7,9 +7,12 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
+/**
+ * Repository for entity {@link OrViewTask}.
+ */
 public interface OrViewTaskRepository extends TaskRepository<OrViewTask> {
 
-    // Lädt Task und TaskGroup in einer Query
+    // Loads Task and TaskGroup in a single query
     @Query("SELECT t FROM OrViewTask t JOIN FETCH t.taskGroup WHERE t.id = :id")
     Optional<OrViewTask> findByIdWithTaskGroup(@Param("id") long id);
 }

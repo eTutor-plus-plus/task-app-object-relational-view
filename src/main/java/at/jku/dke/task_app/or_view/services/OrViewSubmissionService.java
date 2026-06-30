@@ -19,6 +19,13 @@ public class OrViewSubmissionService extends BaseSubmissionService<OrViewTask, O
 
     private final EvaluationService evaluationService;
 
+    /**
+     * Creates a new OrViewSubmissionService.
+     *
+     * @param submissionRepository the submission repository
+     * @param taskRepository       the task repository
+     * @param evaluationService    the evaluation service for grading submissions
+     */
     public OrViewSubmissionService(OrViewSubmissionRepository submissionRepository,
                                    OrViewTaskRepository taskRepository,
                                    EvaluationService evaluationService) {

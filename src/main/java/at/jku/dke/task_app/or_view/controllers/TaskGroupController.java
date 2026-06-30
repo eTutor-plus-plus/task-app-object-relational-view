@@ -14,6 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class TaskGroupController
     extends BaseTaskGroupController<OrViewTaskGroup, TaskGroupDto, ModifyOrViewTaskGroupDto> {
 
+    /**
+     * Creates a new TaskGroupController.
+     *
+     * @param taskGroupService the service for managing task groups
+     */
     public TaskGroupController(OrViewTaskGroupService taskGroupService) {
         super(taskGroupService);
     }

@@ -41,6 +41,13 @@ public class OrViewTaskService extends BaseTaskInGroupService<OrViewTask, OrView
         Pattern.compile("CREATE\\s+(?:OR\\s+REPLACE\\s+)?VIEW\\s+(\\w+)",
             Pattern.CASE_INSENSITIVE);
 
+    /**
+     * Creates a new OrViewTaskService.
+     *
+     * @param repository          the task repository
+     * @param taskGroupRepository the task group repository
+     * @param messageSource       the message source for localized messages
+     */
     public OrViewTaskService(OrViewTaskRepository repository,
                              OrViewTaskGroupRepository taskGroupRepository,
                              MessageSource messageSource) {

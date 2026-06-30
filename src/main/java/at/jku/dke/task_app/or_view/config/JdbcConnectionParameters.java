@@ -14,6 +14,9 @@ public record JdbcConnectionParameters(
     long maxLifetime,
     long connectionTimeout
 ) {
+    /** Credentials for the admin database connection. */
     public record AdminCredentials(String username, String password) {}
+
+    /** Credentials for the executor database connection. */
     public record ExecutorCredentials(String username, String password) {}
 }

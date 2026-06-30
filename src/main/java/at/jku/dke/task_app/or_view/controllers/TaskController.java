@@ -15,6 +15,11 @@ import java.net.URI;
 @RestController
 public class TaskController extends BaseTaskController<OrViewTask, TaskDto, ModifyOrViewTaskDto> {
 
+    /**
+     * Creates a new TaskController.
+     *
+     * @param taskService the service for managing tasks
+     */
     public TaskController(OrViewTaskService taskService) {
         super(taskService);
     }

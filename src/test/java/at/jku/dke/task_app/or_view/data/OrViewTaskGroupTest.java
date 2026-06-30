@@ -20,15 +20,12 @@ class OrViewTaskGroupTest {
 
     @Test
     void testGetSetDescription() {
-        // Arrange
         var taskGroup = new OrViewTaskGroup();
         var value = "description-test";
 
-        // Act
         taskGroup.setDescription(value);
         var result = taskGroup.getDescription();
 
-        // Assert
         assertEquals(value, result);
     }
 
@@ -46,7 +43,6 @@ class OrViewTaskGroupTest {
 
     @Test
     void testGetSetExtensionalSchema() {
-        // Arrange
         var taskGroup = new OrViewTaskGroup();
         var value = "extensional-schema";
 
@@ -58,7 +54,6 @@ class OrViewTaskGroupTest {
 
     @Test
     void testGetSetSubmitInserts() {
-        // Arrange
         var taskGroup = new OrViewTaskGroup();
         var value = "submit-inserts";
 
